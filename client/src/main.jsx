@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { useCanvasStore, useEditorStore } from './store'
+import { AuthProvider } from './context/AuthContext'
 import devHelper from './utils/devHelper'
 
 // Expose stores and helpers to window for development/testing
@@ -25,6 +26,8 @@ if (import.meta.env.DEV) {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <AuthProvider>
+      <App />
+    </AuthProvider>
   </StrictMode>,
 )

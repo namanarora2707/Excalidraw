@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { COLOR_PALETTE, COLORS } from '../../constants';
-import { ChevronDown } from 'lucide-react';
+import { COLOR_PALETTE, COLORS } from '../../../constants';
+import { ChevronDown } from "lucide-react";
 
 /**
  * Color Picker Component - Compact Version

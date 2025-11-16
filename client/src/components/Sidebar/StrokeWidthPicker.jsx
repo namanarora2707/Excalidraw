@@ -1,4 +1,4 @@
-import { STROKE_WIDTHS } from '../../constants';
+import { STROKE_WIDTHS } from '../../../constants';
 
 /**
  * Stroke Width Picker Component - Compact Version

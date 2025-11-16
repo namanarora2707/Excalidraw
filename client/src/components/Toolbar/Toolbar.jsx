@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import ToolButton from './ToolButton';
 import { useEditorStore } from '../../store';
-import { TOOLS } from '../../constants';
+import { TOOLS } from '../../../constants';
 import { useState } from 'react';
 
 /**

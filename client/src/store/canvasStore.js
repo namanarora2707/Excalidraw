@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createCanvas } from '../types';
 import * as storage from '../utils/storage';
 import { useHistoryStore } from './historyStore';
+import canvasService from '../services/canvasService';
 
 /**
  * Canvas Store - Manages all canvases and current canvas state
@@ -112,6 +113,9 @@ export const useCanvasStore = create((set, get) => ({
       hasUnsavedChanges: true 
     });
     
+    // Send real-time update
+    canvasService.sendAddElement(element);
+    
     // Note: History commit is handled by tools calling commitChanges()
   },
 
@@ -139,6 +143,9 @@ export const useCanvasStore = create((set, get) => ({
       hasUnsavedChanges: true 
     });
     
+    // Send real-time update
+    canvasService.sendUpdateElement(elementId, updates);
+    
     // Note: History commit is handled by tools calling commitChanges()
   },
 
@@ -163,6 +170,9 @@ export const useCanvasStore = create((set, get) => ({
       canvases,
       hasUnsavedChanges: true 
     });
+    
+    // Send real-time update
+    canvasService.sendDeleteElement(elementId);
     
     // Note: History commit is handled by tools calling commitChanges()
   },
@@ -189,6 +199,9 @@ export const useCanvasStore = create((set, get) => ({
       canvases,
       hasUnsavedChanges: true 
     });
+    
+    // Send real-time updates for each deleted element
+    elementIds.forEach(id => canvasService.sendDeleteElement(id));
   },
 
   /**
@@ -267,70 +280,57 @@ export const useCanvasStore = create((set, get) => ({
   }),
 
   /**
-   * Create a new canvas and save to localStorage
+   * Create a new canvas and save to backend
    */
-  createCanvas: (name = 'Untitled Canvas') => {
-    const newCanvas = createCanvas(name);
-    const canvases = new Map(get().canvases);
-    canvases.set(newCanvas.id, newCanvas);
+  createCanvas: async (name = 'Untitled Canvas') => {
+    set({ isLoading: true });
     
-    // Save to localStorage
-    storage.saveCanvas(newCanvas);
-    storage.saveLastOpenedCanvasId(newCanvas.id);
-    
-    // Initialize history with the new canvas
-    useHistoryStore.getState().initializeHistory(newCanvas);
-    
-    set({ 
-      currentCanvas: newCanvas,
-      canvases,
-      hasUnsavedChanges: false 
-    });
-    
-    return newCanvas;
-  },
-
-  /**
-   * Load a canvas by ID from localStorage
-   */
-  loadCanvas: (canvasId) => {
-    const canvas = storage.loadCanvas(canvasId);
-    if (canvas) {
-      const canvases = new Map(get().canvases);
-      canvases.set(canvas.id, canvas);
+    try {
+      const newCanvas = createCanvas(name);
+      const response = await canvasService.createCanvas(newCanvas);
       
-      storage.saveLastOpenedCanvasId(canvasId);
-      
-      // Initialize history with the loaded canvas
-      useHistoryStore.getState().initializeHistory(canvas);
-      
-      set({ 
-        currentCanvas: canvas,
-        canvases,
-        hasUnsavedChanges: false 
-      });
-      
-      return true;
-    }
-    return false;
-  },
-
-  /**
-   * Load last opened canvas or initialize from localStorage
-   */
-  loadLastCanvas: () => {
-    const lastCanvasId = storage.getLastOpenedCanvasId();
-    
-    if (lastCanvasId) {
-      const canvas = storage.loadCanvas(lastCanvasId);
-      if (canvas) {
-        const canvases = new Map();
+      if (response.success) {
+        const savedCanvas = response.data;
+        const canvases = new Map(get().canvases);
+        canvases.set(savedCanvas._id, savedCanvas);
         
-        // Load all canvases
-        const allCanvases = storage.getAllCanvases();
-        Object.values(allCanvases).forEach(c => {
-          canvases.set(c.id, c);
+        // Initialize history with the new canvas
+        useHistoryStore.getState().initializeHistory(savedCanvas);
+        
+        set({ 
+          currentCanvas: savedCanvas,
+          canvases,
+          hasUnsavedChanges: false,
+          isLoading: false
         });
+        
+        // Join the canvas room for real-time collaboration
+        canvasService.joinCanvas(savedCanvas._id);
+        
+        return savedCanvas;
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      console.error('Error creating canvas:', error);
+      set({ isLoading: false });
+      throw error;
+    }
+  },
+
+  /**
+   * Load a canvas by ID from backend
+   */
+  loadCanvas: async (canvasId) => {
+    set({ isLoading: true });
+    
+    try {
+      const response = await canvasService.getCanvas(canvasId);
+      
+      if (response.success) {
+        const canvas = response.data;
+        const canvases = new Map(get().canvases);
+        canvases.set(canvas._id, canvas);
         
         // Initialize history with the loaded canvas
         useHistoryStore.getState().initializeHistory(canvas);
@@ -338,40 +338,109 @@ export const useCanvasStore = create((set, get) => ({
         set({ 
           currentCanvas: canvas,
           canvases,
-          hasUnsavedChanges: false 
+          hasUnsavedChanges: false,
+          isLoading: false
         });
         
+        // Join the canvas room for real-time collaboration
+        canvasService.joinCanvas(canvas._id);
+        
         return true;
+      } else {
+        set({ isLoading: false });
+        return false;
       }
+    } catch (error) {
+      console.error('Error loading canvas:', error);
+      set({ isLoading: false });
+      return false;
     }
-    
-    // Load all canvases even if no last canvas
-    const allCanvases = storage.getAllCanvases();
-    const canvasesMap = new Map();
-    Object.values(allCanvases).forEach(c => {
-      canvasesMap.set(c.id, c);
-    });
-    
-    set({ 
-      canvases: canvasesMap,
-      currentCanvas: null,
-      hasUnsavedChanges: false 
-    });
-    
-    return false;
   },
 
   /**
-   * Save current canvas to localStorage
+   * Load last opened canvas or initialize from backend
    */
-  saveCanvas: () => {
+  loadLastCanvas: async () => {
+    set({ isLoading: true });
+    
+    try {
+      // Get all canvases from backend
+      const response = await canvasService.getAllCanvases();
+      
+      if (response.success) {
+        const canvasesArray = response.data;
+        const canvasesMap = new Map();
+        
+        // Convert array to map
+        canvasesArray.forEach(canvas => {
+          canvasesMap.set(canvas._id, canvas);
+        });
+        
+        set({ 
+          canvases: canvasesMap,
+          isLoading: false
+        });
+        
+        // If there are canvases, load the first one
+        if (canvasesArray.length > 0) {
+          const firstCanvas = canvasesArray[0];
+          
+          // Initialize history with the loaded canvas
+          useHistoryStore.getState().initializeHistory(firstCanvas);
+          
+          set({ 
+            currentCanvas: firstCanvas,
+            hasUnsavedChanges: false
+          });
+          
+          // Join the canvas room for real-time collaboration
+          canvasService.joinCanvas(firstCanvas._id);
+          
+          return true;
+        }
+      }
+      
+      set({ isLoading: false });
+      return false;
+    } catch (error) {
+      console.error('Error loading canvases:', error);
+      set({ isLoading: false });
+      return false;
+    }
+  },
+
+  /**
+   * Save current canvas to backend
+   */
+  saveCanvas: async () => {
     const currentCanvas = get().currentCanvas;
     if (currentCanvas) {
-      const success = storage.saveCanvas(currentCanvas);
-      if (success) {
-        set({ hasUnsavedChanges: false });
+      set({ isLoading: true });
+      
+      try {
+        // Convert canvas to backend format
+        const canvasData = {
+          name: currentCanvas.name,
+          elements: currentCanvas.elements,
+          appState: currentCanvas.appState
+        };
+        
+        const response = await canvasService.updateCanvas(currentCanvas._id, canvasData);
+        
+        if (response.success) {
+          set({ 
+            hasUnsavedChanges: false,
+            isLoading: false
+          });
+          return true;
+        } else {
+          throw new Error(response.error);
+        }
+      } catch (error) {
+        console.error('Error saving canvas:', error);
+        set({ isLoading: false });
+        return false;
       }
-      return success;
     }
     return false;
   },
@@ -379,11 +448,12 @@ export const useCanvasStore = create((set, get) => ({
   /**
    * Rename a canvas
    */
-  renameCanvas: (canvasId, newName) => {
+  renameCanvas: async (canvasId, newName) => {
     const canvases = new Map(get().canvases);
     const canvas = canvases.get(canvasId);
     
     if (canvas) {
+      // Update local state first
       const updatedCanvas = {
         ...canvas,
         name: newName,
@@ -391,53 +461,100 @@ export const useCanvasStore = create((set, get) => ({
       };
       canvases.set(canvasId, updatedCanvas);
       
-      // Save to localStorage
-      storage.saveCanvas(updatedCanvas);
-      
       set({ 
         canvases,
-        currentCanvas: get().currentCanvas?.id === canvasId ? updatedCanvas : get().currentCanvas,
-        hasUnsavedChanges: false 
+        currentCanvas: get().currentCanvas?._id === canvasId ? updatedCanvas : get().currentCanvas,
+        hasUnsavedChanges: true 
       });
+      
+      // Save to backend
+      try {
+        const canvasData = {
+          name: newName,
+          elements: updatedCanvas.elements,
+          appState: updatedCanvas.appState
+        };
+        
+        const response = await canvasService.updateCanvas(canvasId, canvasData);
+        
+        if (response.success) {
+          set({ hasUnsavedChanges: false });
+        }
+      } catch (error) {
+        console.error('Error renaming canvas:', error);
+      }
     }
   },
 
   /**
-   * Delete a canvas (with localStorage sync)
+   * Delete a canvas (with backend sync)
    */
-  deleteCanvas: (canvasId) => {
-    const canvases = new Map(get().canvases);
-    canvases.delete(canvasId);
+  deleteCanvas: async (canvasId) => {
+    set({ isLoading: true });
     
-    // Delete from localStorage
-    storage.deleteCanvas(canvasId);
-    
-    const currentCanvas = get().currentCanvas;
-    const newCurrentCanvas = currentCanvas?.id === canvasId ? null : currentCanvas;
-    
-    set({ 
-      canvases,
-      currentCanvas: newCurrentCanvas,
-      hasUnsavedChanges: false 
-    });
+    try {
+      const response = await canvasService.deleteCanvas(canvasId);
+      
+      if (response.success) {
+        const canvases = new Map(get().canvases);
+        canvases.delete(canvasId);
+        
+        const currentCanvas = get().currentCanvas;
+        const newCurrentCanvas = currentCanvas?._id === canvasId ? null : currentCanvas;
+        
+        set({ 
+          canvases,
+          currentCanvas: newCurrentCanvas,
+          hasUnsavedChanges: false,
+          isLoading: false
+        });
+      } else {
+        throw new Error(response.error);
+      }
+    } catch (error) {
+      console.error('Error deleting canvas:', error);
+      set({ isLoading: false });
+    }
   },
 
   /**
-   * Duplicate a canvas (with localStorage sync)
+   * Duplicate a canvas (with backend sync)
    */
-  duplicateCanvas: (canvasId) => {
-    const duplicated = storage.duplicateCanvas(canvasId);
+  duplicateCanvas: async (canvasId) => {
+    set({ isLoading: true });
     
-    if (duplicated) {
+    try {
       const canvases = new Map(get().canvases);
-      canvases.set(duplicated.id, duplicated);
+      const canvas = canvases.get(canvasId);
       
-      set({ 
-        canvases,
-        hasUnsavedChanges: false 
-      });
-      
-      return duplicated;
+      if (canvas) {
+        // Create a new canvas with duplicated data
+        const duplicatedCanvas = {
+          name: `${canvas.name} (Copy)`,
+          elements: canvas.elements,
+          appState: canvas.appState
+        };
+        
+        const response = await canvasService.createCanvas(duplicatedCanvas);
+        
+        if (response.success) {
+          const savedCanvas = response.data;
+          canvases.set(savedCanvas._id, savedCanvas);
+          
+          set({ 
+            canvases,
+            hasUnsavedChanges: false,
+            isLoading: false
+          });
+          
+          return savedCanvas;
+        } else {
+          throw new Error(response.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error duplicating canvas:', error);
+      set({ isLoading: false });
     }
     
     return null;
@@ -479,7 +596,7 @@ export const useCanvasStore = create((set, get) => ({
     if (previousState) {
       // Restore the previous state without triggering history
       const canvases = new Map(get().canvases);
-      canvases.set(previousState.id, previousState);
+      canvases.set(previousState._id || previousState.id, previousState);
       
       set({
         currentCanvas: previousState,
@@ -501,7 +618,7 @@ export const useCanvasStore = create((set, get) => ({
     if (nextState) {
       // Restore the next state without triggering history
       const canvases = new Map(get().canvases);
-      canvases.set(nextState.id, nextState);
+      canvases.set(nextState._id || nextState.id, nextState);
       
       set({
         currentCanvas: nextState,

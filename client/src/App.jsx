@@ -9,6 +9,9 @@ import UndoRedo from './components/UndoRedo';
 import { useCanvasStore, useEditorStore } from './store';
 import { useToolShortcuts, useUndoRedoShortcuts, useSelectAllShortcut } from './hooks';
 import { migrateAllCanvases } from './utils/migration';
+import { useAuth } from './context/AuthContext';
+import Login from './components/Auth/Login';
+import Register from './components/Auth/Register';
 import './App.css';
 
 const App = () => {
@@ -16,6 +19,7 @@ const App = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { currentCanvas, loadLastCanvas, createCanvas, undo, redo } = useCanvasStore();
   const { setCurrentTool, setSelectedElements } = useEditorStore();
+  const { isAuthenticated, loading } = useAuth();
 
   // Enable keyboard shortcuts for tools
   useToolShortcuts(setCurrentTool);
@@ -55,6 +59,25 @@ const App = () => {
       // setIsCanvasManagerOpen(true);
     }
   }, [loadLastCanvas, createCanvas]);
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Placeholder for routing - in a real app you'd use React Router */}
+        <Login />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col bg-gray-50 overflow-hidden">

@@ -1,8 +1,8 @@
 import { create } from 'zustand';
-import { TOOLS, DEFAULT_ELEMENT, ZOOM } from '../constants';
+import { TOOLS, DEFAULT_ELEMENT, ZOOM } from '../../constants';
 
 /**
- * Editor Store - Manages editor state (tool, colors, zoom, selection, etc.)
+ * Editor Store - Manages editor state (current tool, colors, zoom level, etc.)
  */
 export const useEditorStore = create((set, get) => ({
   // Current tool
