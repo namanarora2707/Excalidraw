@@ -14,7 +14,7 @@ import {
 import ToolButton from './ToolButton';
 import { useEditorStore } from '../../store';
 import { TOOLS } from '../../../constants';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Main Toolbar Component
@@ -23,6 +23,21 @@ import { useState } from 'react';
  */
 export default function Toolbar() {
   const { currentTool, setCurrentTool, isCanvasLocked, setIsCanvasLocked } = useEditorStore();
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
 
   const tools = [
     {
@@ -125,11 +140,17 @@ export default function Toolbar() {
     }
   };
 
+  // For mobile, we'll show a simplified toolbar with fewer tools
+  const mobileTools = isMobile ? tools.filter(tool => 
+    tool.type === 'separator' || 
+    ['lock', TOOLS.SELECT, TOOLS.RECTANGLE, TOOLS.ELLIPSE, TOOLS.DRAW, TOOLS.TEXT, TOOLS.ERASER].includes(tool.id)
+  ) : tools;
+
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-3">
+    <div className="bg-white border-b border-gray-200 px-4 py-3 toolbar-responsive">
       <div className="flex items-center justify-center">
         <div className="flex items-center gap-1">
-          {tools.map((tool, index) => {
+          {(isMobile ? mobileTools : tools).map((tool, index) => {
             if (tool.type === 'separator') {
               return (
                 <div
@@ -149,6 +170,7 @@ export default function Toolbar() {
                 isActive={tool.special ? isCanvasLocked && tool.id === 'lock' : currentTool === tool.id}
                 disabled={tool.disabled}
                 onClick={() => handleToolClick(tool.id)}
+                className={isMobile ? "tool-button-responsive" : ""}
               />
             );
           })}

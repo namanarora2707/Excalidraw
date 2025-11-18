@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Edit2, Check, X } from 'lucide-react';
 import { useEditorStore, useCanvasStore } from '../../store';
 import ColorPicker from './ColorPicker';
@@ -16,6 +16,7 @@ import FontFamilyPicker from './FontFamilyPicker';
 export default function Sidebar({ isOpen, onToggle }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   const { 
     strokeColor, 
     fillColor, 
@@ -37,6 +38,20 @@ export default function Sidebar({ isOpen, onToggle }) {
     text: false,
     advanced: false,
   });
+
+  // Check screen size
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    
+    return () => {
+      window.removeEventListener('resize', checkScreenSize);
+    };
+  }, []);
 
   // Get selected elements
   const selectedElements = currentCanvas?.elements?.filter(
@@ -115,7 +130,7 @@ export default function Sidebar({ isOpen, onToggle }) {
   if (!isOpen) return null;
 
   return (
-    <aside className="fixed left-0 top-[65px] bottom-0 w-60 bg-white border-r border-gray-200 overflow-y-auto flex flex-col z-30 shadow-xl">
+    <aside className={`fixed left-0 top-[65px] bottom-0 bg-white border-r border-gray-200 overflow-y-auto flex flex-col z-30 shadow-xl sidebar-responsive ${isMobile ? 'w-full' : 'w-60'}`}>
       {/* Sidebar Header */}
       <div className="border-b border-gray-200 p-3">
         {/* Canvas Name */}
@@ -131,18 +146,18 @@ export default function Sidebar({ isOpen, onToggle }) {
                     if (e.key === 'Enter') handleSaveName();
                     if (e.key === 'Escape') handleCancelEdit();
                   }}
-                  className="flex-1 px-2 py-1 text-xs border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="flex-1 px-2 py-1 text-xs border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 input-mobile"
                   autoFocus
                 />
                 <button
                   onClick={handleSaveName}
-                  className="p-1 rounded hover:bg-green-50 text-green-600"
+                  className="p-1 rounded hover:bg-green-50 text-green-600 btn-mobile"
                 >
                   <Check size={14} />
                 </button>
                 <button
                   onClick={handleCancelEdit}
-                  className="p-1 rounded hover:bg-red-50 text-red-600"
+                  className="p-1 rounded hover:bg-red-50 text-red-600 btn-mobile"
                 >
                   <X size={14} />
                 </button>

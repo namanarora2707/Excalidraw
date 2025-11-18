@@ -380,7 +380,7 @@ const Canvas = () => {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full relative bg-white overflow-hidden"
+      className="w-full h-full relative bg-white overflow-hidden canvas-responsive"
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
@@ -391,7 +391,7 @@ const Canvas = () => {
         ref={canvasRef}
         width={dimensions.width}
         height={dimensions.height}
-        className="block"
+        className="block w-full h-full"
         style={{ touchAction: 'none' }}
       />
     </div>

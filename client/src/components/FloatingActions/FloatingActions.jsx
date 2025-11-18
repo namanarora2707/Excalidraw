@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import {
+import { 
   Download,
   FolderOpen,
   Check,
@@ -9,6 +9,7 @@ import {
   FileType,
   Upload,
   Copy,
+  LogOut,
 } from 'lucide-react';
 import { useCanvasStore } from '../../store';
 import {
@@ -25,7 +26,7 @@ import AutoSaveIndicator from '../AutoSaveIndicator';
  * Floating Action Buttons
  * Positioned at top-right corner
  */
-export default function FloatingActions({ onOpenCanvasManager, onToggleSidebar, isSidebarOpen }) {
+export default function FloatingActions({ onOpenCanvasManager, onToggleSidebar, isSidebarOpen, onLogout }) {
   const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -227,6 +228,16 @@ export default function FloatingActions({ onOpenCanvasManager, onToggleSidebar, 
         >
           <FolderOpen size={18} />
           <span className="text-sm font-medium">My Canvases</span>
+        </button>
+
+        {/* Logout Button */}
+        <button
+          onClick={onLogout}
+          className="p-3 bg-white rounded-lg shadow-lg border border-gray-200 hover:bg-gray-50 transition-colors flex items-center gap-2"
+          title="Logout"
+        >
+          <LogOut size={20} className="text-gray-700" />
+          <span className="text-sm font-medium text-gray-700">Logout</span>
         </button>
       </div>
 

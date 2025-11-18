@@ -1,4 +1,5 @@
-// WebSocket service for real-time collaboration
+// WebSocket service for real-time collaboration using Socket.IO
+import { io } from 'socket.io-client';
 
 class WebSocketService {
   constructor() {
@@ -9,106 +10,120 @@ class WebSocketService {
 
   // Connect to WebSocket server
   connect() {
-    // In a real application, you would use the actual WebSocket server URL
-    // For now, we'll use a placeholder
     try {
-      this.socket = new WebSocket('ws://localhost:5000');
+      // Use the actual Socket.IO server URL
+      const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:5004';
+      console.log('Connecting to Socket.IO server at:', backendUrl);
       
-      this.socket.onopen = () => {
-        console.log('WebSocket connected');
+      this.socket = io(backendUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+        // Add path if needed for compatibility with backend
+        path: '/socket.io'
+      });
+      
+      this.socket.on('connect', () => {
+        console.log('Socket.IO connected with ID:', this.socket.id);
         this.isConnected = true;
         this.emit('connected');
-      };
+      });
 
-      this.socket.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          this.emit(data.type, data.payload);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-
-      this.socket.onclose = () => {
-        console.log('WebSocket disconnected');
+      this.socket.on('disconnect', () => {
+        console.log('Socket.IO disconnected');
         this.isConnected = false;
         this.emit('disconnected');
-      };
+      });
 
-      this.socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
+      this.socket.on('connect_error', (error) => {
+        console.error('Socket.IO connection error:', error);
         this.emit('error', error);
-      };
+      });
+
+      // Listen for all custom events and emit them to local listeners
+      this.socket.on('drawingUpdate', (payload) => {
+        console.log('Received drawingUpdate event:', payload);
+        this.emit('drawingUpdate', payload);
+      });
+      
+      this.socket.on('addElement', (payload) => {
+        console.log('Received addElement event:', payload);
+        this.emit('addElement', payload);
+      });
+      
+      this.socket.on('updateElement', (payload) => {
+        console.log('Received updateElement event:', payload);
+        this.emit('updateElement', payload);
+      });
+      
+      this.socket.on('deleteElement', (payload) => {
+        console.log('Received deleteElement event:', payload);
+        this.emit('deleteElement', payload);
+      });
+      
+      this.socket.on('canvasUpdate', (payload) => {
+        console.log('Received canvasUpdate event:', payload);
+        this.emit('canvasUpdate', payload);
+      });
     } catch (error) {
-      console.error('Error connecting to WebSocket:', error);
+      console.error('Error connecting to Socket.IO:', error);
     }
   }
 
   // Disconnect from WebSocket server
   disconnect() {
     if (this.socket) {
-      this.socket.close();
+      this.socket.disconnect();
       this.isConnected = false;
     }
   }
 
   // Join a canvas room
   joinCanvas(canvasId) {
-    if (this.isConnected) {
-      this.socket.send(JSON.stringify({
-        type: 'joinCanvas',
-        payload: { canvasId }
-      }));
+    console.log('Joining canvas room:', canvasId);
+    if (this.isConnected && this.socket) {
+      this.socket.emit('joinCanvas', canvasId);
+    } else {
+      console.warn('Cannot join canvas room - not connected to Socket.IO server');
     }
   }
 
   // Send drawing update
   sendDrawingUpdate(canvasId, updateData) {
-    if (this.isConnected) {
-      this.socket.send(JSON.stringify({
-        type: 'drawingUpdate',
-        payload: { canvasId, ...updateData }
-      }));
+    if (this.isConnected && this.socket) {
+      this.socket.emit('drawingUpdate', { canvasId, ...updateData });
     }
   }
 
   // Send element addition
   sendAddElement(canvasId, element) {
-    if (this.isConnected) {
-      this.socket.send(JSON.stringify({
-        type: 'addElement',
-        payload: { canvasId, element }
-      }));
+    console.log('Sending addElement event:', { canvasId, element });
+    if (this.isConnected && this.socket) {
+      this.socket.emit('addElement', { canvasId, element });
     }
   }
 
   // Send element update
   sendUpdateElement(canvasId, elementId, updates) {
-    if (this.isConnected) {
-      this.socket.send(JSON.stringify({
-        type: 'updateElement',
-        payload: { canvasId, elementId, updates }
-      }));
+    console.log('Sending updateElement event:', { canvasId, elementId, updates });
+    if (this.isConnected && this.socket) {
+      this.socket.emit('updateElement', { canvasId, elementId, updates });
     }
   }
 
   // Send element deletion
   sendDeleteElement(canvasId, elementId) {
-    if (this.isConnected) {
-      this.socket.send(JSON.stringify({
-        type: 'deleteElement',
-        payload: { canvasId, elementId }
-      }));
+    console.log('Sending deleteElement event:', { canvasId, elementId });
+    if (this.isConnected && this.socket) {
+      this.socket.emit('deleteElement', { canvasId, elementId });
     }
   }
 
   // Send canvas update
   sendCanvasUpdate(canvasId, canvasData) {
-    if (this.isConnected) {
-      this.socket.send(JSON.stringify({
-        type: 'canvasUpdate',
-        payload: { canvasId, canvasData }
-      }));
+    if (this.isConnected && this.socket) {
+      this.socket.emit('canvasUpdate', { canvasId, canvasData });
     }
   }
 

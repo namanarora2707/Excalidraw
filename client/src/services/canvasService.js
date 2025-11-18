@@ -9,6 +9,7 @@ class CanvasService {
     this.listeners = {};
     
     // Initialize WebSocket connection
+    console.log('Initializing WebSocket connection');
     this.initWebSocket();
   }
 
@@ -18,28 +19,34 @@ class CanvasService {
     
     // Listen for real-time updates
     websocketService.on('drawingUpdate', (data) => {
+      console.log('CanvasService received drawingUpdate:', data);
       this.emit('drawingUpdate', data);
     });
     
     websocketService.on('addElement', (data) => {
+      console.log('CanvasService received addElement:', data);
       this.emit('addElement', data);
     });
     
     websocketService.on('updateElement', (data) => {
+      console.log('CanvasService received updateElement:', data);
       this.emit('updateElement', data);
     });
     
     websocketService.on('deleteElement', (data) => {
+      console.log('CanvasService received deleteElement:', data);
       this.emit('deleteElement', data);
     });
     
     websocketService.on('canvasUpdate', (data) => {
+      console.log('CanvasService received canvasUpdate:', data);
       this.emit('canvasUpdate', data);
     });
   }
 
   // Join a canvas room for real-time collaboration
   joinCanvas(canvasId) {
+    console.log('CanvasService joining canvas:', canvasId);
     this.currentCanvasId = canvasId;
     websocketService.joinCanvas(canvasId);
   }

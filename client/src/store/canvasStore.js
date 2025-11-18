@@ -4,6 +4,9 @@ import * as storage from '../utils/storage';
 import { useHistoryStore } from './historyStore';
 import canvasService from '../services/canvasService';
 
+// Set up real-time update listeners immediately when the store is loaded
+setupRealTimeListeners();
+
 /**
  * Canvas Store - Manages all canvases and current canvas state
  */
@@ -212,7 +215,7 @@ export const useCanvasStore = create((set, get) => ({
     canvases.delete(canvasId);
     
     const currentCanvas = get().currentCanvas;
-    const newCurrentCanvas = currentCanvas?.id === canvasId ? null : currentCanvas;
+    const newCurrentCanvas = currentCanvas?._id === canvasId ? null : currentCanvas;
     
     set({ 
       canvases,
@@ -642,3 +645,128 @@ export const useCanvasStore = create((set, get) => ({
     return useHistoryStore.getState().canRedo();
   },
 }));
+
+// Set up real-time update listeners
+function setupRealTimeListeners() {
+  console.log('Setting up real-time listeners');
+  
+  // Handle element additions from other users
+  canvasService.on('addElement', (payload) => {
+    const { canvasId, element } = payload;
+    const state = useCanvasStore.getState();
+    
+    console.log('Handling addElement from other user:', payload);
+    
+    // Only update if we're on the same canvas
+    if (state.currentCanvas && state.currentCanvas._id === canvasId) {
+      console.log('Adding element to current canvas');
+      // Add the element without sending it back to WebSocket (to avoid infinite loop)
+      const currentCanvas = state.currentCanvas;
+      const updatedCanvas = {
+        ...currentCanvas,
+        elements: [...currentCanvas.elements, element],
+        updatedAt: new Date().toISOString(),
+      };
+
+      const canvases = new Map(state.canvases);
+      canvases.set(updatedCanvas._id, updatedCanvas);
+
+      useCanvasStore.setState({ 
+        currentCanvas: updatedCanvas,
+        canvases,
+        hasUnsavedChanges: true 
+      });
+    } else {
+      console.log('Ignoring addElement - not on the same canvas');
+    }
+  });
+
+  // Handle element updates from other users
+  canvasService.on('updateElement', (payload) => {
+    const { canvasId, elementId, updates } = payload;
+    const state = useCanvasStore.getState();
+    
+    console.log('Handling updateElement from other user:', payload);
+    
+    // Only update if we're on the same canvas
+    if (state.currentCanvas && state.currentCanvas._id === canvasId) {
+      console.log('Updating element in current canvas');
+      // Update the element without sending it back to WebSocket (to avoid infinite loop)
+      const currentCanvas = state.currentCanvas;
+      const updatedCanvas = {
+        ...currentCanvas,
+        elements: currentCanvas.elements.map(el =>
+          (el.id === elementId || el._id === elementId) ? { ...el, ...updates } : el
+        ),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const canvases = new Map(state.canvases);
+      canvases.set(updatedCanvas._id, updatedCanvas);
+
+      useCanvasStore.setState({ 
+        currentCanvas: updatedCanvas,
+        canvases,
+        hasUnsavedChanges: true 
+      });
+    } else {
+      console.log('Ignoring updateElement - not on the same canvas');
+    }
+  });
+
+  // Handle element deletions from other users
+  canvasService.on('deleteElement', (payload) => {
+    const { canvasId, elementId } = payload;
+    const state = useCanvasStore.getState();
+    
+    console.log('Handling deleteElement from other user:', payload);
+    
+    // Only update if we're on the same canvas
+    if (state.currentCanvas && state.currentCanvas._id === canvasId) {
+      console.log('Deleting element from current canvas');
+      // Delete the element without sending it back to WebSocket (to avoid infinite loop)
+      const currentCanvas = state.currentCanvas;
+      const updatedCanvas = {
+        ...currentCanvas,
+        elements: currentCanvas.elements.filter(el => 
+          el.id !== elementId && el._id !== elementId
+        ),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const canvases = new Map(state.canvases);
+      canvases.set(updatedCanvas._id, updatedCanvas);
+
+      useCanvasStore.setState({ 
+        currentCanvas: updatedCanvas,
+        canvases,
+        hasUnsavedChanges: true 
+      });
+    } else {
+      console.log('Ignoring deleteElement - not on the same canvas');
+    }
+  });
+
+  // Handle canvas updates from other users
+  canvasService.on('canvasUpdate', (payload) => {
+    const { canvasId, canvasData } = payload;
+    const state = useCanvasStore.getState();
+    
+    console.log('Handling canvasUpdate from other user:', payload);
+    
+    // Only update if we're on the same canvas
+    if (state.currentCanvas && state.currentCanvas._id === canvasId) {
+      console.log('Updating canvas data');
+      const canvases = new Map(state.canvases);
+      canvases.set(canvasId, canvasData);
+      
+      useCanvasStore.setState({ 
+        currentCanvas: canvasData,
+        canvases,
+        hasUnsavedChanges: true 
+      });
+    } else {
+      console.log('Ignoring canvasUpdate - not on the same canvas');
+    }
+  });
+}

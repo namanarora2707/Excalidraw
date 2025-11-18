@@ -32,3 +32,301 @@ canvas {
   -moz-user-select: none;
   -ms-user-select: none;
 }
+
+/* Responsive Canvas Container */
+.canvas-responsive {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Responsive Toolbar */
+.toolbar-responsive {
+  width: 100%;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Responsive Sidebar */
+.sidebar-responsive {
+  position: fixed;
+  left: 0;
+  top: 65px;
+  bottom: 0;
+  width: 240px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+  z-index: 30;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-responsive.collapsed {
+  transform: translateX(-100%);
+}
+
+/* Responsive Floating Actions */
+.floating-actions-responsive {
+  position: fixed;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 40;
+}
+
+/* Responsive Undo/Redo Controls */
+.undo-redo-responsive {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.5rem;
+  z-index: 40;
+}
+
+/* Responsive Modal */
+.modal-responsive {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 3rem;
+}
+
+.modal-backdrop-responsive {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.modal-content-responsive {
+  position: relative;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 64rem;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  margin: 0 1rem;
+}
+
+/* Responsive Dashboard */
+.dashboard-responsive {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fafb;
+  overflow: hidden;
+}
+
+/* Responsive Main Content */
+.main-responsive {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Responsive Canvas Area */
+.canvas-area-responsive {
+  position: absolute;
+  inset: 0;
+}
+
+/* Responsive Canvas List */
+.canvas-list-responsive {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 1.5rem 1.5rem;
+}
+
+/* Responsive Header */
+.header-responsive {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+/* Responsive Button */
+.btn-responsive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+/* Responsive Tool Button */
+.tool-button-responsive {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 44px;
+  min-height: 44px; /* Minimum touch target size */
+}
+
+/* Responsive Color Picker */
+.color-picker-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Responsive Stroke Width Picker */
+.stroke-width-responsive {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Responsive Opacity Slider */
+.opacity-slider-responsive {
+  width: 100%;
+}
+
+/* Media Queries for Different Screen Sizes */
+
+/* Mobile Styles (up to 767px) */
+@media (max-width: 767px) {
+  .toolbar-responsive {
+    padding: 0.5rem;
+  }
+  
+  .sidebar-responsive {
+    width: 100%;
+    top: 60px;
+    max-height: 50vh;
+    border-right: none;
+    border-top: 1px solid #e5e7eb;
+    position: relative;
+    transform: none;
+  }
+  
+  .sidebar-responsive.collapsed {
+    transform: none;
+    display: none;
+  }
+  
+  .floating-actions-responsive {
+    right: 0.75rem;
+    top: auto;
+    bottom: 5rem;
+    transform: none;
+    flex-direction: row;
+  }
+  
+  .undo-redo-responsive {
+    bottom: 0.75rem;
+  }
+  
+  .modal-content-responsive {
+    margin: 0 0.5rem;
+    max-height: 90vh;
+  }
+  
+  .header-responsive {
+    padding: 0.75rem 1rem;
+  }
+  
+  .canvas-list-responsive {
+    padding: 0 1rem 1rem;
+  }
+  
+  .tool-button-responsive {
+    padding: 0.4rem;
+    min-width: 36px;
+    min-height: 36px;
+  }
+  
+  .btn-responsive {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Tablet Styles (768px to 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sidebar-responsive {
+    width: 220px;
+  }
+  
+  .modal-content-responsive {
+    max-width: 90%;
+  }
+  
+  .tool-button-responsive {
+    padding: 0.6rem;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
+/* Desktop Styles (1024px and above) */
+@media (min-width: 1024px) {
+  .sidebar-responsive {
+    width: 240px;
+  }
+  
+  .modal-content-responsive {
+    max-width: 64rem;
+  }
+}
+
+/* Large Screens (1280px and above) */
+@media (min-width: 1280px) {
+  .modal-content-responsive {
+    max-width: 70rem;
+  }
+}
+
+/* Touch Device Specific Styles */
+@media (hover: none) and (pointer: coarse) {
+  .tool-button-responsive,
+  .btn-responsive {
+    min-height: 44px; /* Minimum touch target size */
+    min-width: 44px;
+  }
+  
+  .sidebar-responsive {
+    min-height: 200px;
+  }
+}
+
+/* Orientation Changes */
+@media (orientation: landscape) {
+  .sidebar-responsive {
+    max-height: 70vh;
+  }
+}
+
+@media (orientation: portrait) {
+  .sidebar-responsive {
+    max-height: 50vh;
+  }
+}

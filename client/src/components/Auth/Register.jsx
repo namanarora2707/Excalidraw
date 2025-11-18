@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../utils/api';
 
 const Register = () => {
@@ -12,6 +13,12 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { isAuthenticated, register } = useAuth();
+
+  // If already authenticated, redirect to dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/app" replace />;
+  }
 
   const { username, email, password, confirmPassword } = formData;
 
@@ -37,14 +44,11 @@ const Register = () => {
     setError('');
 
     try {
-      const response = await authAPI.register({ username, email, password });
+      const response = await register({ username, email, password });
       
       if (response.success) {
-        // Save token to localStorage
-        localStorage.setItem('token', response.data.token);
-        
-        // Redirect to main app
-        navigate('/');
+        // Redirect to dashboard
+        navigate('/app', { replace: true });
       } else {
         setError(response.error);
       }
@@ -86,6 +90,7 @@ const Register = () => {
                 onChange={onChange}
               />
             </div>
+            <br />
             <div>
               <label htmlFor="email-address" className="sr-only">
                 Email address
@@ -102,6 +107,7 @@ const Register = () => {
                 onChange={onChange}
               />
             </div>
+            <br />
             <div>
               <label htmlFor="password" className="sr-only">
                 Password
@@ -118,6 +124,7 @@ const Register = () => {
                 onChange={onChange}
               />
             </div>
+            <br />
             <div>
               <label htmlFor="confirm-password" className="sr-only">
                 Confirm Password

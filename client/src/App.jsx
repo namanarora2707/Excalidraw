@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Menu } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Menu, LogOut, Grid } from 'lucide-react';
 import CanvasManager from './components/CanvasManager/CanvasManager';
-import Canvas from './components/Canvas';
+import Canvas from './components/Canvas/Canvas';
 import Toolbar from './components/Toolbar';
 import Sidebar from './components/Sidebar';
 import FloatingActions from './components/FloatingActions';
@@ -12,9 +13,24 @@ import { migrateAllCanvases } from './utils/migration';
 import { useAuth } from './context/AuthContext';
 import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
+import Homepage from './components/Homepage/Homepage';
+import Dashboard from './Dashboard'; // Import Dashboard component
 import './App.css';
 
-const App = () => {
+// Create a wrapper component for CanvasWrapper to use useNavigate hook
+const CanvasWrapperWithNavigation = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+  
+  return <CanvasWrapper navigate={navigate} logout={handleLogout} />;
+};
+
+const CanvasWrapper = ({ navigate, logout }) => {
   const [isCanvasManagerOpen, setIsCanvasManagerOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { currentCanvas, loadLastCanvas, createCanvas, undo, redo } = useCanvasStore();
@@ -69,14 +85,9 @@ const App = () => {
     );
   }
 
-  // Show login if not authenticated
+  // If not authenticated, redirect to homepage
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {/* Placeholder for routing - in a real app you'd use React Router */}
-        <Login />
-      </div>
-    );
+    return <Navigate to="/" replace />;
   }
 
   return (
@@ -138,6 +149,7 @@ const App = () => {
       {currentCanvas && (
         <FloatingActions 
           onOpenCanvasManager={() => setIsCanvasManagerOpen(true)}
+          onLogout={logout}
         />
       )}
 
@@ -151,6 +163,56 @@ const App = () => {
       />
     </div>
   );
+};
+
+// Create a wrapper component for Dashboard to use useNavigate hook
+const DashboardWithNavigation = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+  
+  return <Dashboard navigate={navigate} logout={handleLogout} />;
+};
+
+const App = () => {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Homepage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/app" element={  // Changed from /Canvas to /app to match dashboard route
+          <ProtectedRoute>
+            <DashboardWithNavigation />  // Using Dashboard component with navigation
+          </ProtectedRoute>
+        } />
+        <Route path="/canvas" element={
+          <ProtectedRoute>
+            <CanvasWrapperWithNavigation />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Router>
+  );
+};
+
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/" replace />;
 };
 
 export default App;

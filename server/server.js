@@ -20,13 +20,19 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST']
-  }
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    credentials: true
+  },
+  // Add path for compatibility with frontend
+  path: '/socket.io'
 });
 
 // Connect to database
-connectDB();
+connectDB().catch(err => {
+  console.error('Failed to connect to MongoDB:', err.message);
+  console.log('Continuing without database connection for testing purposes');
+});
 
 // Middleware
 app.use(cors());
@@ -48,27 +54,32 @@ io.on('connection', (socket) => {
 
   // Handle drawing updates
   socket.on('drawingUpdate', (data) => {
+    console.log('Received drawingUpdate from client:', socket.id, data);
     // Broadcast to all other clients in the same canvas room
     socket.to(data.canvasId).emit('drawingUpdate', data);
   });
 
   // Handle element additions
   socket.on('addElement', (data) => {
+    console.log('Received addElement from client:', socket.id, data);
     socket.to(data.canvasId).emit('addElement', data);
   });
 
   // Handle element updates
   socket.on('updateElement', (data) => {
+    console.log('Received updateElement from client:', socket.id, data);
     socket.to(data.canvasId).emit('updateElement', data);
   });
 
   // Handle element deletions
   socket.on('deleteElement', (data) => {
+    console.log('Received deleteElement from client:', socket.id, data);
     socket.to(data.canvasId).emit('deleteElement', data);
   });
 
   // Handle canvas updates
   socket.on('canvasUpdate', (data) => {
+    console.log('Received canvasUpdate from client:', socket.id, data);
     socket.to(data.canvasId).emit('canvasUpdate', data);
   });
 
@@ -85,7 +96,7 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5004;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

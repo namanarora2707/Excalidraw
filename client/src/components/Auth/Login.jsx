@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../utils/api';
 
 const Login = () => {
@@ -10,6 +11,12 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { isAuthenticated, login } = useAuth();
+
+  // If already authenticated, redirect to dashboard
+  if (isAuthenticated) {
+    return <Navigate to="/app" replace />;
+  }
 
   const { email, password } = formData;
 
@@ -23,14 +30,11 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await authAPI.login({ email, password });
+      const response = await login({ email, password });
       
       if (response.success) {
-        // Save token to localStorage
-        localStorage.setItem('token', response.data.token);
-        
-        // Redirect to main app
-        navigate('/');
+        // Redirect to dashboard
+        navigate('/app', { replace: true });
       } else {
         setError(response.error);
       }
@@ -72,6 +76,7 @@ const Login = () => {
                 onChange={onChange}
               />
             </div>
+            <br />
             <div>
               <label htmlFor="password" className="sr-only">
                 Password

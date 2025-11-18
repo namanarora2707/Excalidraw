@@ -30,3 +30,202 @@
   box-shadow: none;
   outline: none;
 }
+
+/* Responsive Design - Mobile First Approach */
+/* Base styles for mobile */
+@media (max-width: 767px) {
+  /* General mobile styles */
+  .mobile-hidden {
+    display: none !important;
+  }
+  
+  .mobile-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .mobile-p-2 {
+    padding: 0.5rem !important;
+  }
+  
+  .mobile-p-4 {
+    padding: 1rem !important;
+  }
+  
+  .mobile-m-2 {
+    margin: 0.5rem !important;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem !important;
+  }
+  
+  .mobile-text-base {
+    font-size: 1rem !important;
+  }
+  
+  .mobile-text-lg {
+    font-size: 1.125rem !important;
+  }
+  
+  .mobile-flex-col {
+    flex-direction: column !important;
+  }
+  
+  .mobile-items-center {
+    align-items: center !important;
+  }
+  
+  .mobile-justify-center {
+    justify-content: center !important;
+  }
+  
+  /* Canvas container adjustments */
+  .canvas-container {
+    padding: 0 !important;
+  }
+  
+  /* Toolbar adjustments */
+  .toolbar-mobile {
+    padding: 0.5rem !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .toolbar-button-mobile {
+    padding: 0.4rem !important;
+    margin: 0.1rem !important;
+  }
+  
+  .toolbar-icon-mobile {
+    width: 16px !important;
+    height: 16px !important;
+  }
+  
+  /* Sidebar adjustments */
+  .sidebar-mobile {
+    width: 100% !important;
+    height: auto !important;
+    position: relative !important;
+    top: 0 !important;
+    border-right: none !important;
+    border-top: 1px solid #e5e7eb !important;
+    box-shadow: none !important;
+    max-height: 50vh !important;
+  }
+  
+  /* Modal adjustments */
+  .modal-mobile {
+    margin: 0.5rem !important;
+    padding: 0.5rem !important;
+  }
+  
+  .modal-content-mobile {
+    max-height: 85vh !important;
+  }
+  
+  /* Button adjustments */
+  .btn-mobile {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  /* Input adjustments */
+  .input-mobile {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+  
+  /* Canvas list adjustments */
+  .canvas-list-item-mobile {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 0.75rem !important;
+  }
+  
+  .canvas-list-actions-mobile {
+    margin-top: 0.5rem !important;
+    align-self: flex-end !important;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .tablet-hidden {
+    display: none !important;
+  }
+  
+  .tablet-full-width {
+    width: 100% !important;
+  }
+  
+  .tablet-p-4 {
+    padding: 1rem !important;
+  }
+  
+  .tablet-p-6 {
+    padding: 1.5rem !important;
+  }
+  
+  /* Sidebar adjustments */
+  .sidebar-tablet {
+    width: 240px !important;
+  }
+  
+  /* Modal adjustments */
+  .modal-tablet {
+    max-width: 90% !important;
+  }
+}
+
+/* Desktop styles */
+@media (min-width: 1024px) {
+  .desktop-full-width {
+    width: 100% !important;
+  }
+  
+  /* Sidebar adjustments */
+  .sidebar-desktop {
+    width: 240px !important;
+  }
+}
+
+/* Large screen styles */
+@media (min-width: 1280px) {
+  .large-screen-container {
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Extra large screen styles */
+@media (min-width: 1536px) {
+  .extra-large-container {
+    max-width: 1600px !important;
+    margin: 0 auto !important;
+  }
+}
+
+/* Touch device specific styles */
+@media (hover: none) and (pointer: coarse) {
+  .touch-device-button {
+    padding: 0.75rem !important;
+    min-height: 44px !important; /* Minimum touch target size */
+  }
+  
+  .touch-device-toolbar {
+    padding: 0.75rem !important;
+  }
+  
+  .touch-device-icon {
+    width: 20px !important;
+    height: 20px !important;
+  }
+}
+
+/* High resolution display styles */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-res-canvas {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
