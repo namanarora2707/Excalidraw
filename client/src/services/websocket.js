@@ -12,10 +12,12 @@ class WebSocketService {
   connect() {
     try {
       // Use the actual Socket.IO server URL
-      const backendUrl = process.env.VITE_BACKEND_URL || 'http://localhost:5004';
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5004';
+            // Ensure WebSocket uses the correct protocol (ws for http, wss for https)
+            const wsUrl = backendUrl.replace(/^https/, 'wss').replace(/^http/, 'ws');
       console.log('Connecting to Socket.IO server at:', backendUrl);
       
-      this.socket = io(backendUrl, {
+      this.socket = io(wsUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: 5,

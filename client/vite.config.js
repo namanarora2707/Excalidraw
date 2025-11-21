@@ -8,7 +8,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://excalidraw-ymh0.onrender.com',
+        target: 'http://localhost:5004',
         changeOrigin: true,
         secure: false,
       }

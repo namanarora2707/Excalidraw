@@ -1,6 +1,6 @@
 // API utility functions for interacting with the backend
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api';
 
 // Helper function for making API requests
 const apiRequest = async (endpoint, options = {}) => {
