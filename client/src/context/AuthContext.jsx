@@ -42,8 +42,10 @@ export const AuthProvider = ({ children }) => {
 
   // Login function
   const login = async (credentials) => {
+    console.log('Attempting login with credentials:', credentials);
     try {
       const response = await authAPI.login(credentials);
+      console.log('Login response:', response);
       
       if (response.success) {
         localStorage.setItem('token', response.data.token);
@@ -54,14 +56,17 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: response.error };
       }
     } catch (error) {
+      console.error('Login error:', error);
       return { success: false, error: 'Something went wrong. Please try again.' };
     }
   };
 
   // Register function
   const register = async (userData) => {
+    console.log('Attempting registration with data:', userData);
     try {
       const response = await authAPI.register(userData);
+      console.log('Registration response:', response);
       
       if (response.success) {
         localStorage.setItem('token', response.data.token);
@@ -72,6 +77,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: response.error };
       }
     } catch (error) {
+      console.error('Registration error:', error);
       return { success: false, error: 'Something went wrong. Please try again.' };
     }
   };

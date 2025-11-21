@@ -39,8 +39,9 @@ const corsOptions = {
   origin: process.env.CLIENT_URL || '*',
   credentials: true,
   optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Length', 'X-Requested-With']
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -50,7 +51,14 @@ app.options('*', (req, res) => {
   res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL || '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Max-Age', '86400'); // 24 hours
   res.sendStatus(200);
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 // Routes
@@ -112,6 +120,11 @@ app.use((err, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 5004;
+console.log('Starting server on port:', PORT);
+console.log('Environment variables:');
+console.log('CLIENT_URL:', process.env.CLIENT_URL);
+console.log('NODE_ENV:', process.env.NODE_ENV);
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Server URL: http://localhost:${PORT}`);
 });

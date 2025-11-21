@@ -1,6 +1,13 @@
 // API utility functions for interacting with the backend
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api';
+// For production, if VITE_BACKEND_URL is the same as the current domain, use '/api'
+// Otherwise, use the full backend URL
+const isSameDomain = import.meta.env.VITE_BACKEND_URL && 
+  window.location.origin === import.meta.env.VITE_BACKEND_URL;
+const API_BASE_URL = isSameDomain ? '/api' : (import.meta.env.VITE_BACKEND_URL || '/api');
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('Window location:', window.location.origin);
+console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
 
 // Helper function for making API requests
 const apiRequest = async (endpoint, options = {}) => {
@@ -21,6 +28,7 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 
   try {
+    console.log('Making API request to:', url, config);
     const response = await fetch(url, config);
     
     // Handle successful responses
@@ -30,11 +38,24 @@ const apiRequest = async (endpoint, options = {}) => {
     }
     
     // Handle error responses
-    const errorData = await response.json();
-    return { success: false, error: errorData.message || 'Something went wrong' };
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch (parseError) {
+      errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+    }
+    
+    console.error('API request failed with status:', response.status, errorData);
+    return { success: false, error: errorData.message || `HTTP ${response.status}: ${response.statusText}` };
   } catch (error) {
-    console.error('API request failed:', error);
-    return { success: false, error: 'Network error - please try again' };
+    console.error('Network error:', error);
+    
+    // Provide more specific error messages
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return { success: false, error: 'Network error - unable to connect to server. Please check your internet connection and try again.' };
+    }
+    
+    return { success: false, error: `Network error: ${error.message || 'Unknown error'}` };
   }
 };
 
