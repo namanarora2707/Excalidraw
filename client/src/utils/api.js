@@ -38,9 +38,7 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
-// Auth API functions
 export const authAPI = {
-  // Register a new user
   register: async (userData) => {
     return apiRequest('/auth/register', {
       method: 'POST',
