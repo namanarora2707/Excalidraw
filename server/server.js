@@ -43,8 +43,16 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Length', 'X-Requested-With']
 };
+
+console.log('CORS configuration:', corsOptions);
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
+  next();
+});
 
 // Handle preflight requests
 app.options('*', (req, res) => {
@@ -61,9 +69,33 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
+// Test endpoint for auth routes
+app.get('/api/test', (req, res) => {
+  res.status(200).json({ message: 'API routes are working' });
+});
+
+// Simple test endpoint
+app.get('/test', (req, res) => {
+  res.status(200).json({ message: 'Server is running' });
+});
+
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/canvas', canvasRoutes);
+app.use('/api/auth', (req, res, next) => {
+  console.log('Auth route middleware hit:', req.method, req.url);
+  console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
+  next();
+}, authRoutes);
+app.use('/api/canvas', (req, res, next) => {
+  console.log('Canvas route middleware hit:', req.method, req.url);
+  console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
+  next();
+}, canvasRoutes);
+
+// Log all incoming requests for debugging
+app.use((req, res, next) => {
+  console.log('Incoming request:', req.method, req.url);
+  next();
+});
 
 // Socket.io connection
 io.on('connection', (socket) => {
@@ -112,6 +144,18 @@ io.on('connection', (socket) => {
   });
 });
 
+// Catch-all for undefined routes
+app.use('*', (req, res, next) => {
+  console.log('Unhandled route:', req.method, req.originalUrl);
+  next();
+});
+
+// 404 handler
+app.use((req, res, next) => {
+  console.log('404 - Route not found:', req.method, req.originalUrl);
+  res.status(404).json({ message: 'Route not found' });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -124,7 +168,28 @@ console.log('Starting server on port:', PORT);
 console.log('Environment variables:');
 console.log('CLIENT_URL:', process.env.CLIENT_URL);
 console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('VITE_BACKEND_URL should be set in client, not server');
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Server URL: http://localhost:${PORT}`);
+  console.log('Server is ready to handle requests');
+  
+  // Test if server is accessible
+  console.log('Server routes mounted:');
+  console.log('- /api/auth/*');
+  console.log('- /api/canvas/*');
+  console.log('- /health');
+  console.log('- /test');
+  
+  // Verify routes are accessible
+  console.log('Try accessing these endpoints to verify server is working:');
+  console.log(`- http://localhost:${PORT}/test`);
+  console.log(`- http://localhost:${PORT}/health`);
+  console.log(`- http://localhost:${PORT}/api/test`);
+});
+
+// Handle server startup errors
+server.on('error', (error) => {
+  console.error('Server startup error:', error);
 });

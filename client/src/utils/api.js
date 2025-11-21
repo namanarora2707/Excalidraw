@@ -1,17 +1,20 @@
 // API utility functions for interacting with the backend
 
-// For production, if VITE_BACKEND_URL is the same as the current domain, use '/api'
-// Otherwise, use the full backend URL
-const isSameDomain = import.meta.env.VITE_BACKEND_URL && 
-  window.location.origin === import.meta.env.VITE_BACKEND_URL;
-const API_BASE_URL = isSameDomain ? '/api' : (import.meta.env.VITE_BACKEND_URL || '/api');
+// Use the backend URL from environment variables, or default to '/api' for same-domain requests
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api';
+console.log('Using API_BASE_URL:', API_BASE_URL);
 console.log('API_BASE_URL:', API_BASE_URL);
 console.log('Window location:', window.location.origin);
 console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
 
 // Helper function for making API requests
 const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
+  // Ensure endpoint starts with '/'
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE_URL}${normalizedEndpoint}`;
+  
+  console.log(`Making API request to ${url} with options:`, options);
+  console.log('Full request URL:', url);
   
   const config = {
     headers: {
@@ -29,6 +32,11 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     console.log('Making API request to:', url, config);
+    console.log('Fetch options:', {
+      method: config.method || 'GET',
+      headers: config.headers,
+      body: config.body
+    });
     const response = await fetch(url, config);
     
     // Handle successful responses
@@ -46,9 +54,14 @@ const apiRequest = async (endpoint, options = {}) => {
     }
     
     console.error('API request failed with status:', response.status, errorData);
+    console.error('Response headers:', response.headers);
+    console.error('Response URL:', response.url);
     return { success: false, error: errorData.message || `HTTP ${response.status}: ${response.statusText}` };
   } catch (error) {
     console.error('Network error:', error);
+    console.error('Error type:', error.constructor.name);
+    console.error('Error message:', error.message);
+    console.error('Stack trace:', error.stack);
     
     // Provide more specific error messages
     if (error instanceof TypeError && error.message.includes('fetch')) {
