@@ -45,14 +45,13 @@ const corsOptions = {
 };
 
 console.log('CORS configuration:', corsOptions);
-app.use(cors(corsOptions));
-app.use(express.json());
-
 // Log all requests
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
   next();
 });
+app.use(cors(corsOptions));
+app.use(express.json());
 
 // Handle preflight requests
 app.options('*', (req, res) => {
@@ -74,28 +73,67 @@ app.get('/api/test', (req, res) => {
   res.status(200).json({ message: 'API routes are working' });
 });
 
+// Test endpoint for auth register
+app.post('/api/auth/test-register', (req, res) => {
+  res.status(200).json({ message: 'Auth register route is accessible', received: req.body });
+});
+
+// Direct test for auth register
+app.post('/api/auth/register', (req, res) => {
+  res.status(200).json({ message: 'Direct auth register route is accessible', received: req.body });
+});
+
+// Direct test for auth login
+app.post('/api/auth/login', (req, res) => {
+  res.status(200).json({ message: 'Direct auth login route is accessible', received: req.body });
+});
+
 // Simple test endpoint
 app.get('/test', (req, res) => {
   res.status(200).json({ message: 'Server is running' });
+});
+
+// Test all routes
+app.get('/routes', (req, res) => {
+  res.status(200).json({ 
+    message: 'Available routes',
+    routes: [
+      'GET /test',
+      'GET /health',
+      'GET /api/test',
+      'POST /api/auth/test-register',
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'GET /api/auth/profile (protected)',
+      'GET /api/canvas (protected)',
+      'POST /api/canvas (protected)',
+      'GET /api/canvas/:id (protected)',
+      'PUT /api/canvas/:id (protected)',
+      'DELETE /api/canvas/:id (protected)'
+    ]
+  });
+});
+
+// API Routes Debugging
+app.use('/api', (req, res, next) => {
+  console.log('API route hit:', req.method, req.url);
+  console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
+  next();
 });
 
 // Routes
 app.use('/api/auth', (req, res, next) => {
   console.log('Auth route middleware hit:', req.method, req.url);
   console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
+  console.log('Request body:', req.body);
   next();
 }, authRoutes);
 app.use('/api/canvas', (req, res, next) => {
   console.log('Canvas route middleware hit:', req.method, req.url);
   console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
+  console.log('Request body:', req.body);
   next();
 }, canvasRoutes);
-
-// Log all incoming requests for debugging
-app.use((req, res, next) => {
-  console.log('Incoming request:', req.method, req.url);
-  next();
-});
 
 // Socket.io connection
 io.on('connection', (socket) => {
@@ -145,7 +183,7 @@ io.on('connection', (socket) => {
 });
 
 // Catch-all for undefined routes
-app.use('*', (req, res, next) => {
+app.use((req, res, next) => {
   console.log('Unhandled route:', req.method, req.originalUrl);
   next();
 });

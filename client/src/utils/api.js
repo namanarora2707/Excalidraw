@@ -3,6 +3,7 @@
 // Use the backend URL from environment variables, or default to '/api' for same-domain requests
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api';
 console.log('Using API_BASE_URL:', API_BASE_URL);
+console.log('Window location origin:', window.location.origin);
 console.log('API_BASE_URL:', API_BASE_URL);
 console.log('Window location:', window.location.origin);
 console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
@@ -15,6 +16,8 @@ const apiRequest = async (endpoint, options = {}) => {
   
   console.log(`Making API request to ${url} with options:`, options);
   console.log('Full request URL:', url);
+  console.log('API_BASE_URL:', API_BASE_URL);
+  console.log('normalizedEndpoint:', normalizedEndpoint);
   
   const config = {
     headers: {
@@ -74,6 +77,7 @@ const apiRequest = async (endpoint, options = {}) => {
 
 export const authAPI = {
   register: async (userData) => {
+    console.log('Register API call with data:', userData);
     return apiRequest('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
@@ -82,6 +86,7 @@ export const authAPI = {
 
   // Login user
   login: async (credentials) => {
+    console.log('Login API call with credentials:', credentials);
     return apiRequest('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
