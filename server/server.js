@@ -47,7 +47,7 @@ const corsOptions = {
 console.log('CORS configuration:', corsOptions);
 // Log all requests
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
+  console.log(`${req.method} ${req.url}`);
   next();
 });
 app.use(cors(corsOptions));
@@ -73,19 +73,9 @@ app.get('/api/test', (req, res) => {
   res.status(200).json({ message: 'API routes are working' });
 });
 
-// Test endpoint for auth register
+// Test endpoint for auth routes
 app.post('/api/auth/test-register', (req, res) => {
   res.status(200).json({ message: 'Auth register route is accessible', received: req.body });
-});
-
-// Direct test for auth register
-app.post('/api/auth/register', (req, res) => {
-  res.status(200).json({ message: 'Direct auth register route is accessible', received: req.body });
-});
-
-// Direct test for auth login
-app.post('/api/auth/login', (req, res) => {
-  res.status(200).json({ message: 'Direct auth login route is accessible', received: req.body });
 });
 
 // Simple test endpoint
@@ -114,26 +104,26 @@ app.get('/routes', (req, res) => {
   });
 });
 
+// Routes
+app.use('/api/auth', (req, res, next) => {
+  console.log('Auth route middleware hit:', req.method, req.url);
+  next();
+}, authRoutes);
+app.use('/api/canvas', (req, res, next) => {
+  console.log('Canvas route middleware hit:', req.method, req.url);
+  next();
+}, canvasRoutes);
+
+// Verify routes are loaded
+console.log('Auth routes loaded:', !!authRoutes);
+console.log('Canvas routes loaded:', !!canvasRoutes);
+
 // API Routes Debugging
 app.use('/api', (req, res, next) => {
   console.log('API route hit:', req.method, req.url);
   console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
   next();
 });
-
-// Routes
-app.use('/api/auth', (req, res, next) => {
-  console.log('Auth route middleware hit:', req.method, req.url);
-  console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
-  console.log('Request body:', req.body);
-  next();
-}, authRoutes);
-app.use('/api/canvas', (req, res, next) => {
-  console.log('Canvas route middleware hit:', req.method, req.url);
-  console.log('Full URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
-  console.log('Request body:', req.body);
-  next();
-}, canvasRoutes);
 
 // Socket.io connection
 io.on('connection', (socket) => {
@@ -182,12 +172,6 @@ io.on('connection', (socket) => {
   });
 });
 
-// Catch-all for undefined routes
-app.use((req, res, next) => {
-  console.log('Unhandled route:', req.method, req.originalUrl);
-  next();
-});
-
 // 404 handler
 app.use((req, res, next) => {
   console.log('404 - Route not found:', req.method, req.originalUrl);
@@ -206,11 +190,10 @@ console.log('Starting server on port:', PORT);
 console.log('Environment variables:');
 console.log('CLIENT_URL:', process.env.CLIENT_URL);
 console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('VITE_BACKEND_URL should be set in client, not server');
+// Note: VITE_BACKEND_URL should be set in client, not server
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Server URL: http://localhost:${PORT}`);
   console.log('Server is ready to handle requests');
   
   // Test if server is accessible
@@ -219,12 +202,6 @@ server.listen(PORT, () => {
   console.log('- /api/canvas/*');
   console.log('- /health');
   console.log('- /test');
-  
-  // Verify routes are accessible
-  console.log('Try accessing these endpoints to verify server is working:');
-  console.log(`- http://localhost:${PORT}/test`);
-  console.log(`- http://localhost:${PORT}/health`);
-  console.log(`- http://localhost:${PORT}/api/test`);
 });
 
 // Handle server startup errors

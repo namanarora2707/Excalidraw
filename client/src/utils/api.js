@@ -1,23 +1,30 @@
 // API utility functions for interacting with the backend
 
-// Use the backend URL from environment variables, or default to '/api' for same-domain requests
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api';
-console.log('Using API_BASE_URL:', API_BASE_URL);
-console.log('Window location origin:', window.location.origin);
-console.log('API_BASE_URL:', API_BASE_URL);
-console.log('Window location:', window.location.origin);
-console.log('VITE_BACKEND_URL:', import.meta.env.VITE_BACKEND_URL);
+// Use the backend URL from environment variables
+// In production, this should be the full backend URL
+// In development, this might be empty and we'll use relative paths
+const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const API_BASE_URL = VITE_BACKEND_URL || '/api';
+
+// Log the configuration for debugging
+console.log('API Configuration:', { 
+  VITE_BACKEND_URL, 
+  API_BASE_URL,
+  windowOrigin: window.location.origin
+});
 
 // Helper function for making API requests
 const apiRequest = async (endpoint, options = {}) => {
-  // Ensure endpoint starts with '/'
-  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${API_BASE_URL}${normalizedEndpoint}`;
+  // Construct the full URL
+  // Ensure we don't have double slashes
+  const basePath = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+  const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${basePath}${endpointPath}`;
   
-  console.log(`Making API request to ${url} with options:`, options);
-  console.log('Full request URL:', url);
-  console.log('API_BASE_URL:', API_BASE_URL);
-  console.log('normalizedEndpoint:', normalizedEndpoint);
+  // Log the constructed URL for debugging
+  console.log('Constructed URL:', url);
+  
+  console.log(`Making API request to ${url}`);
   
   const config = {
     headers: {
@@ -34,12 +41,7 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 
   try {
-    console.log('Making API request to:', url, config);
-    console.log('Fetch options:', {
-      method: config.method || 'GET',
-      headers: config.headers,
-      body: config.body
-    });
+    console.log('Making API request to:', url);
     const response = await fetch(url, config);
     
     // Handle successful responses
@@ -57,14 +59,9 @@ const apiRequest = async (endpoint, options = {}) => {
     }
     
     console.error('API request failed with status:', response.status, errorData);
-    console.error('Response headers:', response.headers);
-    console.error('Response URL:', response.url);
     return { success: false, error: errorData.message || `HTTP ${response.status}: ${response.statusText}` };
   } catch (error) {
-    console.error('Network error:', error);
-    console.error('Error type:', error.constructor.name);
-    console.error('Error message:', error.message);
-    console.error('Stack trace:', error.stack);
+    console.error('Network error:', error.message || error);
     
     // Provide more specific error messages
     if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -77,7 +74,6 @@ const apiRequest = async (endpoint, options = {}) => {
 
 export const authAPI = {
   register: async (userData) => {
-    console.log('Register API call with data:', userData);
     return apiRequest('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
@@ -86,7 +82,6 @@ export const authAPI = {
 
   // Login user
   login: async (credentials) => {
-    console.log('Login API call with credentials:', credentials);
     return apiRequest('/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
