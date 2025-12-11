@@ -4,7 +4,12 @@
 // In production, this should be the full backend URL
 // In development, this might be empty and we'll use relative paths
 const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const API_BASE_URL = VITE_BACKEND_URL || '/api';
+// In development, we use relative paths (empty base URL)
+// In production, we use the full backend URL
+const isDevelopment = import.meta.env.DEV;
+const API_BASE_URL = isDevelopment ? '' : (VITE_BACKEND_URL || '');
+
+console.log('Environment detection:', { isDevelopment, VITE_BACKEND_URL, API_BASE_URL });
 
 // Log the configuration for debugging
 console.log('API Configuration:', { 
@@ -17,12 +22,24 @@ console.log('API Configuration:', {
 const apiRequest = async (endpoint, options = {}) => {
   // Construct the full URL
   // Ensure we don't have double slashes
-  const basePath = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
-  const endpointPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-  const url = `${basePath}${endpointPath}`;
+  let basePath = API_BASE_URL;
+  // Remove trailing slash from base path if present
+  if (basePath && basePath.endsWith('/')) {
+    basePath = basePath.slice(0, -1);
+  }
+  // Ensure endpoint starts with /api/
+  let endpointPath = endpoint;
+  if (!endpoint.startsWith('/api/')) {
+    if (endpoint.startsWith('/')) {
+      endpointPath = `/api${endpoint}`;
+    } else {
+      endpointPath = `/api/${endpoint}`;
+    }
+  }
+  // Handle the case where we have an empty base path (development)
+  const url = basePath ? `${basePath}${endpointPath}` : endpointPath;
   
-  // Log the constructed URL for debugging
-  console.log('Constructed URL:', url);
+  console.log('URL Construction:', { basePath, endpointPath, finalUrl: url });
   
   console.log(`Making API request to ${url}`);
   

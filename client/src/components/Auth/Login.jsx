@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../utils/api';
 
@@ -10,7 +10,9 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, login } = useAuth();
 
   // If already authenticated, redirect to dashboard
@@ -28,22 +30,33 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    
+    console.log('Submitting login with credentials:', { email, password });
 
     try {
       const response = await login({ email, password });
+      console.log('Login response in component:', response);
       
       if (response.success) {
-        // Redirect to dashboard
+        // Redirect to canvas/dashboard
         navigate('/app', { replace: true });
       } else {
         setError(response.error);
       }
     } catch (err) {
+      console.error('Login error in component:', err);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  // Check if we came from registration
+  useEffect(() => {
+    if (location.state && location.state.from === 'registration') {
+      setSuccessMessage(location.state.message || 'Registration successful! Please log in with your credentials.');
+    }
+  }, [location.state]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -54,6 +67,11 @@ const Login = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
+          {successMessage && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="text-sm text-green-700">{successMessage}</div>
+            </div>
+          )}
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>

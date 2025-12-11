@@ -48,11 +48,13 @@ export const AuthProvider = ({ children }) => {
       console.log('Login response:', response);
       
       if (response.success) {
+        console.log('Login successful, token received:', response.data.token);
         localStorage.setItem('token', response.data.token);
         setUser(response.data);
         setIsAuthenticated(true);
         return { success: true };
       } else {
+        console.log('Login failed with error:', response.error);
         return { success: false, error: response.error };
       }
     } catch (error) {
@@ -69,11 +71,13 @@ export const AuthProvider = ({ children }) => {
       console.log('Registration response:', response);
       
       if (response.success) {
+        console.log('Registration successful, token received:', response.data.token);
         localStorage.setItem('token', response.data.token);
         setUser(response.data);
         setIsAuthenticated(true);
         return { success: true };
       } else {
+        console.log('Registration failed with error:', response.error);
         return { success: false, error: response.error };
       }
     } catch (error) {

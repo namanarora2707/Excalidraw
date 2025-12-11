@@ -17,6 +17,7 @@ const generateToken = (id) => {
 // @access  Public
 router.post('/register', async (req, res) => {
   console.log('Register endpoint hit with data:', req.body);
+  console.log('Request headers:', req.headers);
   const { username, email, password } = req.body;
 
   try {
@@ -60,6 +61,7 @@ router.post('/register', async (req, res) => {
 // @access  Public
 router.post('/login', async (req, res) => {
   console.log('Login endpoint hit with data:', req.body);
+  console.log('Request headers:', req.headers);
   const { email, password } = req.body;
 
   try {

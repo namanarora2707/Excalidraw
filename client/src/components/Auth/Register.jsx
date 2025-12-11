@@ -12,6 +12,7 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const navigate = useNavigate();
   const { isAuthenticated, register } = useAuth();
 
@@ -42,17 +43,27 @@ const Register = () => {
     
     setLoading(true);
     setError('');
+    
+    console.log('Submitting registration with data:', { username, email, password });
 
     try {
       const response = await register({ username, email, password });
+      console.log('Registration response in component:', response);
       
       if (response.success) {
-        // Redirect to dashboard
-        navigate('/app', { replace: true });
+        // Show success message and redirect to login page after a short delay
+        setSuccessMessage('Registration successful! Redirecting to login page...');
+        setTimeout(() => {
+          navigate('/login', { 
+            replace: true, 
+            state: { from: 'registration', message: 'Registration successful! Please log in with your credentials.' }
+          });
+        }, 2000);
       } else {
         setError(response.error);
       }
     } catch (err) {
+      console.error('Registration error in component:', err);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -68,6 +79,11 @@ const Register = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
+          {successMessage && (
+            <div className="rounded-md bg-green-50 p-4">
+              <div className="text-sm text-green-700">{successMessage}</div>
+            </div>
+          )}
           {error && (
             <div className="rounded-md bg-red-50 p-4">
               <div className="text-sm text-red-700">{error}</div>

@@ -172,16 +172,16 @@ io.on('connection', (socket) => {
   });
 });
 
-// 404 handler
-app.use((req, res, next) => {
-  console.log('404 - Route not found:', req.method, req.originalUrl);
-  res.status(404).json({ message: 'Route not found' });
-});
-
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Something went wrong!' });
+});
+
+// 404 handler - should be the last middleware
+app.use((req, res, next) => {
+  console.log('404 - Route not found:', req.method, req.originalUrl);
+  res.status(404).json({ message: 'Route not found' });
 });
 
 // Start server
