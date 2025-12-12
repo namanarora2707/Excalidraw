@@ -114,6 +114,14 @@ export const authAPI = {
       body: JSON.stringify(credentials),
     });
   },
+  
+  // Test auth routes
+  testRegister: async (userData) => {
+    return apiRequest('/auth/test-register', {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
+  },
 
   // Get user profile
   getProfile: async () => {

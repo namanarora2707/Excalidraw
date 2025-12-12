@@ -18,7 +18,7 @@ const Register = () => {
 
   // If already authenticated, redirect to dashboard
   if (isAuthenticated) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to="/canvas" replace />;
   }
 
   const { username, email, password, confirmPassword } = formData;
