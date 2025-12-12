@@ -59,7 +59,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      return { success: false, error: 'Something went wrong. Please try again.' };
+      // Provide more specific error messages
+      let errorMessage = 'Something went wrong. Please try again.';
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      return { success: false, error: errorMessage };
     }
   };
 
@@ -82,7 +87,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Registration error:', error);
-      return { success: false, error: 'Something went wrong. Please try again.' };
+      // Provide more specific error messages
+      let errorMessage = 'Something went wrong. Please try again.';
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      return { success: false, error: errorMessage };
     }
   };
 

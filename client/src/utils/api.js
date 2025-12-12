@@ -9,6 +9,11 @@ const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const isDevelopment = import.meta.env.DEV;
 const API_BASE_URL = isDevelopment ? '' : (VITE_BACKEND_URL || '');
 
+// Validate that we have a backend URL in production
+if (!isDevelopment && !VITE_BACKEND_URL) {
+  console.error('Missing VITE_BACKEND_URL in production environment');
+}
+
 console.log('Environment detection:', { isDevelopment, VITE_BACKEND_URL, API_BASE_URL });
 
 // Log the configuration for debugging
@@ -90,6 +95,11 @@ const apiRequest = async (endpoint, options = {}) => {
 };
 
 export const authAPI = {
+  // Health check
+  healthCheck: async () => {
+    return apiRequest('/health');
+  },
+  
   register: async (userData) => {
     return apiRequest('/auth/register', {
       method: 'POST',

@@ -8,6 +8,25 @@ const socketIo = require('socket.io');
 // Load environment variables
 dotenv.config();
 
+// Validate required environment variables
+console.log('Validating environment variables...');
+if (!process.env.MONGODB_URI) {
+  console.error('ERROR: MONGODB_URI is not defined in environment variables');
+  process.exit(1);
+}
+
+if (!process.env.JWT_SECRET) {
+  console.error('ERROR: JWT_SECRET is not defined in environment variables');
+  process.exit(1);
+}
+
+if (!process.env.JWT_EXPIRE) {
+  console.error('ERROR: JWT_EXPIRE is not defined in environment variables');
+  process.exit(1);
+}
+
+console.log('Environment variables validation passed');
+
 // Import routes
 const authRoutes = require('./routes/auth');
 const canvasRoutes = require('./routes/canvas');
@@ -43,6 +62,13 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Length', 'X-Requested-With']
 };
+
+// Log CORS configuration
+console.log('CORS Configuration:', {
+  origin: process.env.CLIENT_URL || '*',
+  nodeEnv: process.env.NODE_ENV,
+  clientUrl: process.env.CLIENT_URL
+});
 
 console.log('CORS configuration:', corsOptions);
 // Log all requests
@@ -107,10 +133,12 @@ app.get('/routes', (req, res) => {
 // Routes
 app.use('/api/auth', (req, res, next) => {
   console.log('Auth route middleware hit:', req.method, req.url);
+  console.log('Full auth URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
   next();
 }, authRoutes);
 app.use('/api/canvas', (req, res, next) => {
   console.log('Canvas route middleware hit:', req.method, req.url);
+  console.log('Full canvas URL:', req.protocol + '://' + req.get('host') + req.originalUrl);
   next();
 }, canvasRoutes);
 

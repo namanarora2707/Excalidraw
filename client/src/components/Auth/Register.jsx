@@ -64,7 +64,8 @@ const Register = () => {
       }
     } catch (err) {
       console.error('Registration error in component:', err);
-      setError('Something went wrong. Please try again.');
+      // Show more specific error message
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
