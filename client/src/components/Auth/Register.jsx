@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../utils/api';
@@ -13,12 +13,32 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [serverStatus, setServerStatus] = useState('unknown');
   const navigate = useNavigate();
   const { isAuthenticated, register } = useAuth();
 
+  // Check server connectivity
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      try {
+        const response = await authAPI.healthCheck();
+        if (response.success) {
+          setServerStatus('online');
+        } else {
+          setServerStatus('offline');
+        }
+      } catch (err) {
+        console.error('Server health check failed:', err);
+        setServerStatus('offline');
+      }
+    };
+
+    checkServerStatus();
+  }, []);
+
   // If already authenticated, redirect to dashboard
   if (isAuthenticated) {
-    return <Navigate to="/canvas" replace />;
+    return <Navigate to="/app" replace />;
   }
 
   const { username, email, password, confirmPassword } = formData;
@@ -80,6 +100,11 @@ const Register = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
+          {serverStatus === 'offline' && (
+            <div className="rounded-md bg-yellow-50 p-4">
+              <div className="text-sm text-yellow-700">Warning: Server appears to be offline. You may experience connection issues.</div>
+            </div>
+          )}
           {successMessage && (
             <div className="rounded-md bg-green-50 p-4">
               <div className="text-sm text-green-700">{successMessage}</div>

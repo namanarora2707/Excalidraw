@@ -55,6 +55,14 @@ const apiRequest = async (endpoint, options = {}) => {
     },
     ...options,
   };
+  
+  // Log request details for debugging
+  console.log('API Request Details:', {
+    url,
+    method: options.method || 'GET',
+    hasBody: !!options.body,
+    headers: config.headers
+  });
 
   // Add auth token if available
   const token = localStorage.getItem('token');
@@ -66,9 +74,17 @@ const apiRequest = async (endpoint, options = {}) => {
     console.log('Making API request to:', url);
     const response = await fetch(url, config);
     
+    console.log('API Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url,
+      headers: [...response.headers.entries()]
+    });
+    
     // Handle successful responses
     if (response.ok) {
       const data = await response.json();
+      console.log('API Success Response:', data);
       return { success: true, data };
     }
     
@@ -76,8 +92,10 @@ const apiRequest = async (endpoint, options = {}) => {
     let errorData;
     try {
       errorData = await response.json();
+      console.log('API Error Response (parsed):', errorData);
     } catch (parseError) {
       errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
+      console.log('API Error Response (unparsed):', errorData);
     }
     
     console.error('API request failed with status:', response.status, errorData);

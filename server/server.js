@@ -104,6 +104,33 @@ app.post('/api/auth/test-register', (req, res) => {
   res.status(200).json({ message: 'Auth register route is accessible', received: req.body });
 });
 
+// Test MongoDB connection
+app.get('/health/db', async (req, res) => {
+  try {
+    // Test if we can connect to the database
+    if (mongoose.connection.readyState === 1) {
+      res.status(200).json({ 
+        status: 'OK', 
+        database: 'Connected',
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      res.status(503).json({ 
+        status: 'ERROR', 
+        database: 'Disconnected',
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    res.status(503).json({ 
+      status: 'ERROR', 
+      database: 'Connection failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 // Simple test endpoint
 app.get('/test', (req, res) => {
   res.status(200).json({ message: 'Server is running' });

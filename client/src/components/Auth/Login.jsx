@@ -11,9 +11,29 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [serverStatus, setServerStatus] = useState('unknown');
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, login } = useAuth();
+
+  // Check server connectivity
+  useEffect(() => {
+    const checkServerStatus = async () => {
+      try {
+        const response = await authAPI.healthCheck();
+        if (response.success) {
+          setServerStatus('online');
+        } else {
+          setServerStatus('offline');
+        }
+      } catch (err) {
+        console.error('Server health check failed:', err);
+        setServerStatus('offline');
+      }
+    };
+
+    checkServerStatus();
+  }, []);
 
   // If already authenticated, redirect to dashboard
   if (isAuthenticated) {
@@ -68,6 +88,11 @@ const Login = () => {
           </h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={onSubmit}>
+          {serverStatus === 'offline' && (
+            <div className="rounded-md bg-yellow-50 p-4">
+              <div className="text-sm text-yellow-700">Warning: Server appears to be offline. You may experience connection issues.</div>
+            </div>
+          )}
           {successMessage && (
             <div className="rounded-md bg-green-50 p-4">
               <div className="text-sm text-green-700">{successMessage}</div>
